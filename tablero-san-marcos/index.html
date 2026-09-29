@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Tablero de la obra Centro de Salud San Marcos (Nivel I-3) al corte del 04/08/2026. Datos de una obra de ejercicio.">
+<title>Tablero San Marcos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Rajdhani:wght@500;600;700&display=swap">
+<style>
+/* Layout: consola de mando en el espacio. Fondo de estrellas, paneles de vidrio oscuro y todo lo crítico en rojo de alerta con brillo; lo demás queda en azul holográfico, más quieto */
+:root {
+  color-scheme: dark;
+  --bg: #03050b;
+  --panel: rgba(9, 15, 31, .78);
+  --surface-2: rgba(120, 160, 220, .16);
+  --ink: #e9f1ff;
+  --ink-2: #aebcd8;
+  --ink-3: #8093b6;
+  --line: #1d2f4f;
+  --axis: #3a5682;
+  --accent: #4db8ff;
+  --accent-soft: rgba(77, 184, 255, .18);
+  --good: #38d66b;
+  --warn: #ffb81f;
+  --serious: #ff8a5c;
+  --crit: #ff4a4a;
+  --crit-glow: rgba(255, 74, 74, .55);
+  --crit-bg: rgba(255, 74, 74, .14);
+  --tip-bg: #e9f1ff;
+  --tip-ink: #0a1226;
+  --font-body: "Rajdhani", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-hud: "Orbitron", "Rajdhani", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 70% 45% at 12% -5%, rgba(40, 70, 160, .38), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 95% 25%, rgba(110, 30, 90, .26), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 110%, rgba(20, 90, 140, .24), transparent 70%);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.4;
+  padding-inline: 16px;
+  padding-block: 24px 40px;
+}
+#stars { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.wrap { position: relative; z-index: 1; max-width: 1120px; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3, p { margin: 0; }
+h1 { font-weight: 700; font-size: clamp(28px, 4.6vw, 42px); line-height: 1.05; letter-spacing: .02em; text-transform: uppercase; text-wrap: balance; }
+h2 { font-family: var(--font-hud); font-weight: 600; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; line-height: 1.3; }
+h3 { font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.eyebrow { font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.muted { color: var(--ink-3); }
+.num { font-variant-numeric: tabular-nums; }
+
+.head { display: flex; flex-direction: column; gap: 6px; }
+.head .loc { color: var(--ink-2); font-size: 17px; }
+
+/* alerta principal */
+.status {
+  position: relative; border-radius: 12px; padding: 22px 22px 16px;
+  background: radial-gradient(120% 160% at 0% 0%, rgba(255, 60, 60, .30), rgba(70, 8, 20, .62) 52%, rgba(9, 15, 31, .82));
+  border: 1px solid rgba(255, 96, 96, .75);
+  box-shadow: 0 0 0 1px rgba(255, 74, 74, .25), 0 0 34px var(--crit-glow), inset 0 0 44px rgba(255, 74, 74, .12);
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 24px; align-items: center;
+}
+.status .badge { display: flex; align-items: center; gap: 14px; }
+.status .word { font-family: var(--font-hud); font-weight: 800; font-size: clamp(34px, 8vw, 58px); line-height: 1; letter-spacing: .06em; color: #fff; text-shadow: 0 0 10px rgba(255, 74, 74, .95), 0 0 30px rgba(255, 74, 74, .6); }
+.status .msg { font-size: 20px; line-height: 1.3; text-wrap: pretty; max-width: 60ch; font-weight: 600; }
+.status .meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 14px; letter-spacing: .04em; color: var(--ink-2); padding-top: 10px; border-top: 1px solid rgba(255, 120, 120, .3); }
+@media (max-width: 640px) { .status { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: no-preference) {
+  .status { animation: alerta 3.2s ease-in-out infinite; }
+  @keyframes alerta { 0%, 100% { box-shadow: 0 0 0 1px rgba(255, 74, 74, .25), 0 0 26px rgba(255, 74, 74, .35), inset 0 0 44px rgba(255, 74, 74, .12); } 50% { box-shadow: 0 0 0 1px rgba(255, 74, 74, .45), 0 0 46px rgba(255, 74, 74, .6), inset 0 0 52px rgba(255, 74, 74, .2); } }
+}
+
+/* foco crítico */
+.focus { display: flex; flex-direction: column; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 9px; border-radius: 999px; font-size: 15px; font-weight: 600; background: rgba(9, 15, 31, .8); border: 1px solid var(--axis); max-width: 100%; }
+.chip.crit { border-color: rgba(255, 96, 96, .8); background: var(--crit-bg); box-shadow: 0 0 14px rgba(255, 74, 74, .3); }
+.chip.risk { border-color: rgba(255, 184, 31, .7); background: rgba(255, 184, 31, .10); }
+.chip svg { flex: none; }
+
+/* cifras */
+.stack { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.kpis, .aside { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.tile { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 0; backdrop-filter: blur(6px); }
+.tile .lbl { font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.tile .val { font-weight: 700; font-size: 48px; line-height: 1.05; }
+.tile .val small { font-size: 22px; font-weight: 600; color: var(--ink-2); margin-left: 3px; }
+.tile .sub { font-size: 14px; color: var(--ink-3); }
+.tile.crit { border-color: rgba(255, 96, 96, .8); background: linear-gradient(160deg, rgba(255, 74, 74, .22), rgba(9, 15, 31, .8) 70%); box-shadow: 0 0 22px rgba(255, 74, 74, .32); }
+.tile.crit .val { color: #fff; text-shadow: 0 0 14px rgba(255, 74, 74, .8); }
+.aside .tile { background: transparent; border-style: dashed; backdrop-filter: none; }
+.aside .val { font-size: 34px; }
+.aside .val small { font-size: 17px; }
+.note { font-size: 15px; color: var(--ink-2); max-width: 90ch; }
+
+/* paneles */
+.panel { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 18px 14px; display: flex; flex-direction: column; gap: 14px; min-width: 0; backdrop-filter: blur(6px); }
+.panel::before, .panel::after { content: ""; position: absolute; width: 14px; height: 14px; pointer-events: none; border: 2px solid var(--accent); }
+.panel::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; border-top-left-radius: 10px; }
+.panel::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
+.panel-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 16px; }
+.panel-head p, .panel > div > p { font-size: 15px; color: var(--ink-2); margin-top: 4px; }
+.check { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; color: var(--ink-2); cursor: pointer; }
+.check input { width: 17px; height: 17px; accent-color: var(--crit); margin: 0; }
+
+/* partidas */
+.axis-caps, .axis-ticks { display: grid; grid-template-columns: minmax(0, 230px) minmax(0, 1fr) 150px; gap: 0 14px; font-size: 12px; color: var(--ink-3); padding-inline: 8px; letter-spacing: .04em; }
+.axis-caps .p, .axis-ticks .p { position: relative; height: 16px; }
+.axis-caps .p span, .axis-ticks .p span { position: absolute; white-space: nowrap; }
+.axis-ticks .p span { transform: translateX(-50%); }
+.axis-ticks { border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+.rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.row { display: grid; grid-template-columns: minmax(0, 230px) minmax(0, 1fr) 150px; gap: 0 14px; align-items: center; padding: 8px; border-radius: 8px; border-bottom: 1px solid var(--line); outline-offset: 2px; }
+.row:last-child { border-bottom-color: transparent; }
+.row:focus-visible { outline: 2px solid var(--accent); }
+.row.crit { border: 1px solid rgba(255, 96, 96, .8); background: linear-gradient(90deg, rgba(255, 74, 74, .22), rgba(255, 74, 74, .05) 60%, transparent); box-shadow: 0 0 20px rgba(255, 74, 74, .28); }
+.row.risk { border: 1px solid rgba(255, 184, 31, .55); background: linear-gradient(90deg, rgba(255, 184, 31, .10), transparent 60%); }
+.who { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.who .top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.who .item { font-size: 13px; color: var(--ink-3); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+.who .name { font-weight: 700; font-size: 17px; }
+.who .sub { font-size: 14px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.rc { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; border: 1px solid var(--axis); color: var(--ink-2); border-radius: 3px; padding: 0 5px; line-height: 16px; font-weight: 600; }
+.row.crit .rc { border-color: rgba(255, 130, 130, .9); color: #fff; background: rgba(255, 74, 74, .3); }
+.plot { position: relative; height: 30px; }
+.plot .gl { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
+.plot .gl.zero { background: var(--axis); }
+.plot .gl.amb { background: var(--warn); opacity: .6; }
+.plot .gl.red { background: var(--crit); opacity: .7; }
+.plot .bar { position: absolute; top: 3px; height: 24px; }
+.plot .bar.pos { border-radius: 0 4px 4px 0; }
+.plot .bar.neg { border-radius: 4px 0 0 4px; }
+.plot .bar.glow { box-shadow: 0 0 16px 2px var(--crit-glow); }
+.plot .val { position: absolute; top: 50%; transform: translateY(-50%); font-size: 15px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.plot .val.out { font-weight: 500; color: var(--ink-2); white-space: normal; font-size: 14px; line-height: 1.2; }
+.st { display: flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 600; }
+.st svg { flex: none; }
+@media (max-width: 720px) {
+  .axis-caps, .axis-ticks { grid-template-columns: minmax(0, 1fr); }
+  .axis-caps > :not(.p), .axis-ticks > :not(.p) { display: none; }
+  .row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 4px; }
+  .row .plot { grid-column: 1 / -1; grid-row: 2; }
+}
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; color: var(--ink-2); padding-top: 4px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 20px; align-items: start; }
+
+/* restricciones */
+.rlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rst { display: grid; grid-template-columns: 54px minmax(0, 1fr) 104px; gap: 4px 12px; padding: 10px 8px; border-bottom: 1px solid var(--line); border-radius: 8px; align-items: center; }
+.rst:last-child { border-bottom-color: transparent; }
+.rst.crit { border: 1px solid rgba(255, 96, 96, .8); background: linear-gradient(90deg, rgba(255, 74, 74, .2), transparent 70%); box-shadow: 0 0 16px rgba(255, 74, 74, .25); }
+.rid { font-family: var(--font-hud); font-weight: 600; font-size: 14px; white-space: nowrap; letter-spacing: .04em; }
+.rt { font-size: 16px; text-wrap: pretty; line-height: 1.25; }
+.rm { font-size: 14px; color: var(--ink-3); }
+.rst.crit .rm { color: var(--ink-2); }
+.dy { text-align: right; font-size: 14px; color: var(--ink-2); }
+.dy b { font-size: 26px; font-weight: 700; color: var(--ink); margin-right: 3px; }
+.dtrack { position: relative; height: 4px; background: var(--surface-2); border-radius: 2px; margin-top: 3px; }
+.dtrack i { position: absolute; top: -3px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid #0a1226; box-sizing: content-box; margin-left: -7px; }
+.rst.crit .dtrack i { background: var(--crit); box-shadow: 0 0 10px var(--crit); }
+.dscale { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); margin-top: 6px; }
+@media (max-width: 520px) { .rst { grid-template-columns: 54px minmax(0, 1fr); } .rst .dcol { grid-column: 2; } }
+
+/* medidores */
+.meter { position: relative; height: 12px; background: var(--accent-soft); border-radius: 6px; margin-top: 4px; }
+.mleg { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.mleg i { display: inline-block; width: 2px; height: 14px; background: var(--ink); }
+.meter .fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 6px 0 0 6px; box-shadow: 0 0 12px rgba(77, 184, 255, .6); }
+.meter .tick { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--ink); }
+.big { font-weight: 700; font-size: 44px; line-height: 1; }
+.kv { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.kv.crit .big { color: #fff; text-shadow: 0 0 14px rgba(255, 74, 74, .85); }
+.alert-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #fff; background: var(--crit-bg); border: 1px solid rgba(255, 96, 96, .8); border-radius: 4px; padding: 1px 8px; width: fit-content; }
+
+/* BIM */
+.bim { position: relative; height: 34px; margin-top: 4px; }
+.bim .band { position: absolute; top: 8px; bottom: 8px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 3px; }
+.bim .zero { position: absolute; top: 4px; bottom: 4px; width: 1px; background: var(--axis); }
+.bim .dot { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--crit); border: 2px solid #0a1226; box-sizing: content-box; box-shadow: 0 0 14px 3px var(--crit-glow); }
+.bimcap { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-3); }
+
+.inc { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.inc li { display: grid; grid-template-columns: 66px minmax(0, 1fr) auto; gap: 2px 12px; padding: 9px 8px; border-bottom: 1px solid var(--line); border-radius: 8px; align-items: start; }
+.inc li:last-child { border-bottom-color: transparent; }
+.inc li.crit { border: 1px solid rgba(255, 96, 96, .8); background: linear-gradient(90deg, rgba(255, 74, 74, .2), transparent 75%); box-shadow: 0 0 16px rgba(255, 74, 74, .25); }
+.inc .id { font-family: var(--font-hud); font-weight: 600; font-size: 13px; white-space: nowrap; letter-spacing: .03em; padding-top: 3px; }
+.inc .d { font-size: 16px; line-height: 1.25; }
+.inc .doc { font-size: 14px; color: var(--ink-3); }
+.inc .doc.none { color: var(--ink); font-weight: 700; }
+.sev { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+.sev i { display: inline-block; width: 4px; border-radius: 1px; }
+
+/* tabla */
+details { border-top: 1px solid var(--line); padding-top: 10px; }
+summary { cursor: pointer; font-size: 15px; color: var(--ink-2); font-weight: 600; }
+summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+.tw { overflow-x: auto; margin-top: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 760px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-weight: 600; color: var(--ink-2); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+tr.crit td { background: var(--crit-bg); }
+
+#tip { position: fixed; z-index: 10; pointer-events: none; background: var(--tip-bg); color: var(--tip-ink); border-radius: 6px; padding: 8px 10px; font-size: 14px; line-height: 1.35; max-width: 270px; box-shadow: 0 6px 22px rgba(0, 0, 0, .55); }
+#tip b { font-weight: 700; }
+footer { font-size: 13px; color: var(--ink-3); display: flex; flex-direction: column; gap: 2px; }
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-crit" viewBox="0 0 16 16"><path d="M8 1.2 15.2 14H.8z" fill="var(--crit)"/><path d="M8 5.6v4M8 11.4v.1" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-risk" viewBox="0 0 16 16"><path d="M8 1 15 8 8 15 1 8z" fill="var(--warn)"/><path d="M8 4.8v3.8M8 10.6v.1" stroke="#111d26" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="var(--good)"/><path d="m4.8 8.2 2.2 2.2 4.2-4.6" fill="none" stroke="#06210f" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-adv" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="3" fill="var(--accent)"/><path d="M9.6 4.6 6 8l3.6 3.4" fill="none" stroke="#04182a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-out" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-dasharray="2.4 2"/></symbol>
+</svg>
+
+<div class="wrap">
+  <header class="head">
+    <div class="eyebrow" id="h-contrato"></div>
+    <h1 id="h-obra"></h1>
+    <p class="loc" id="h-ubic"></p>
+  </header>
+
+  <section class="status" id="status" aria-label="Estado de la obra al corte"></section>
+
+  <section class="focus" aria-label="Foco crítico">
+    <div class="eyebrow" style="color:var(--crit)">Foco crítico</div>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <section aria-label="Cifras del corte" class="stack">
+    <div class="kpis" id="kpis"></div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:8px">Se informan aparte</div>
+      <div class="aside" id="aside"></div>
+    </div>
+    <p class="note">El atraso se suma sin compensar: un adelanto no descuenta un atraso. El estado de la obra lo decide la ruta crítica, no el promedio de todas las partidas.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="t-partidas">
+    <div class="panel-head">
+      <div>
+        <h2 id="t-partidas">Partidas de control</h2>
+        <p>Brecha entre lo programado y lo ejecutado, en puntos porcentuales. A la derecha de cero es atraso; a la izquierda, adelanto.</p>
+      </div>
+      <label class="check" for="solo-rc"><input type="checkbox" id="solo-rc"> Solo ruta crítica</label>
+    </div>
+    <div>
+      <div class="axis-caps" aria-hidden="true"><div></div><div class="p" id="cap"></div><div></div></div>
+      <div class="axis-ticks" aria-hidden="true"><div></div><div class="p" id="ticks"></div><div></div></div>
+      <ul class="rows" id="rows"></ul>
+    </div>
+    <div class="legend" id="legend"></div>
+    <details>
+      <summary>Ver los datos de las partidas en tabla</summary>
+      <div class="tw"><table id="tabla"></table></div>
+    </details>
+  </section>
+
+  <div class="cols">
+    <section class="panel" aria-labelledby="t-rest">
+      <div class="panel-head">
+        <div>
+          <h2 id="t-rest">Restricciones</h2>
+          <p id="rest-sub"></p>
+        </div>
+      </div>
+      <div class="eyebrow">Vencen en siete días o menos, contados desde el corte</div>
+      <ul class="rlist" id="rlist"></ul>
+    </section>
+
+    <div class="stack">
+      <section class="panel" aria-labelledby="t-ppc">
+        <div>
+          <h2 id="t-ppc">Plan semanal</h2>
+          <p style="margin-top:4px">Porcentaje de plan cumplido: tareas cumplidas entre tareas comprometidas.</p>
+        </div>
+        <div class="kv"><span class="big" id="ppc-val"></span><span class="muted" id="ppc-lbl"></span></div>
+        <div class="meter" id="ppc-meter" role="img"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="t-bim">
+        <div>
+          <h2 id="t-bim">Modelo BIM</h2>
+          <p style="margin-top:4px">Metrado del modelo contra el del expediente, fuera de la tolerancia de la obra.</p>
+        </div>
+        <div id="bim"></div>
+        <h3>Incompatibilidades abiertas</h3>
+        <ul class="inc" id="inc"></ul>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    <span id="f-fuente"></span>
+    <span>Cada cifra de esta página viene del resultado de la skill metricas-de-obra; la página no calcula.</span>
+  </footer>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+const D = {"obra": {"Obra": "Mejoramiento del Centro de Salud San Marcos — Nivel I-3", "Ubicación": "Distrito de San Marcos, provincia de San Román, región Puno", "Entidad": "Municipalidad Distrital de San Marcos", "Contrato": "N.º 018-2026-MDSM · Suma alzada", "Contratista": "Consorcio Altiplano Sur", "Supervisión": "Ing. Rosa Mamani Quispe (CIP 145782)", "Residente de obra": "Ing. Carlos Huanca Tito (CIP 132904)", "Jefa de oficina técnica": "Ing. Diana Ccopa Larico", "Ingeniero de seguridad": "Ing. Marco Zea Puma", "Inicio de obra": "05/05/2026", "Plazo contractual": "180 días calendario", "Fin contractual": "01/11/2026", "Fecha de corte": "04/08/2026", "Corte anterior": "28/07/2026", "Día de plazo transcurrido": "92 de 180", "Informe semanal N.º": 13, "Periodo del informe": "del 29/07/2026 al 04/08/2026", "Monto de las ocho partidas de control": 1321656.6, "Umbral de atraso ámbar": "10 puntos porcentuales", "Umbral de atraso rojo": "20 puntos porcentuales", "Tolerancia de metrado BIM": "±3 %"}, "corte": "2026-08-04", "semaforo": "CRÍTICO", "mensaje": "«Concreto en columnas» va 29,3 pp por debajo de lo programado y está en la ruta crítica. La ruta crítica completa acumula 9,9 pp.", "indicadores": {"programado_pct": 42.8, "ejecutado_pct": 43.5, "atraso_sin_compensar_pp": 4.2, "adelanto_aparte_pp": 3.2, "anticipado_pp": 1.8, "atraso_ruta_critica_pp": 9.9, "valorizado_soles": 575074.54, "monto_partidas_soles": 1321656.6, "valorizado_pct": 43.5}, "partidas": [{"item": "01.01", "partida": "Obras provisionales", "responsable": "Residencia", "ruta_critica": false, "monto": 48500.0, "peso_pct": 3.7, "programado_pct": 100.0, "ejecutado_pct": 100.0, "brecha_pp": 0.0, "estado": "En plazo"}, {"item": "02.01", "partida": "Movimiento de tierras", "responsable": "Producción", "ruta_critica": false, "monto": 187498.0, "peso_pct": 14.2, "programado_pct": 100.0, "ejecutado_pct": 96.0, "brecha_pp": 4.0, "estado": "En plazo"}, {"item": "03.01", "partida": "Concreto en zapatas", "responsable": "Producción", "ruta_critica": true, "monto": 159469.9, "peso_pct": 12.1, "programado_pct": 100.0, "ejecutado_pct": 88.0, "brecha_pp": 12.0, "estado": "En riesgo"}, {"item": "03.02", "partida": "Concreto en columnas", "responsable": "Producción", "ruta_critica": true, "monto": 100569.36, "peso_pct": 7.6, "programado_pct": 90.2, "ejecutado_pct": 61.0, "brecha_pp": 29.3, "estado": "Crítico"}, {"item": "03.03", "partida": "Concreto en vigas y losas", "responsable": "Producción", "ruta_critica": true, "monto": 228383.34, "peso_pct": 17.3, "programado_pct": 27.8, "ejecutado_pct": 30.0, "brecha_pp": -2.2, "estado": "Adelantada"}, {"item": "04.01", "partida": "Albañilería", "responsable": "Producción", "ruta_critica": false, "monto": 195936.0, "peso_pct": 14.8, "programado_pct": 0.0, "ejecutado_pct": 12.0, "brecha_pp": null, "estado": "Aún no entra en ventana"}, {"item": "05.01", "partida": "Instalaciones sanitarias", "responsable": "Subcontrata", "ruta_critica": false, "monto": 186400.0, "peso_pct": 14.1, "programado_pct": 4.0, "ejecutado_pct": 18.0, "brecha_pp": -14.0, "estado": "Adelantada"}, {"item": "06.01", "partida": "Instalaciones eléctricas", "responsable": "Subcontrata", "ruta_critica": false, "monto": 214900.0, "peso_pct": 16.3, "programado_pct": 3.8, "ejecutado_pct": 9.0, "brecha_pp": -5.2, "estado": "Adelantada"}], "ppc": {"ultima_semana": 13, "ultimo_pct": 57.9, "promedio_pct": 69.8, "semanas": 8}, "restricciones": {"total": 12, "pendientes": 9, "vencen_en_7_dias": [{"id": "R-10", "restriccion": "Firma del protocolo de liberación de columnas eje C (PRT-022)", "partida": "Concreto en columnas", "responsable": "Supervisión", "dias": 1}, {"id": "R-04", "restriccion": "Respuesta del RFI-011: interferencia con la viga V-203", "partida": "Concreto en vigas y losas", "responsable": "Proyectista", "dias": 2}, {"id": "R-07", "restriccion": "Respuesta a la consulta CAR-031 sobre los acuerdos del Acta 07", "partida": "Concreto en vigas y losas", "responsable": "Supervisión", "dias": 3}, {"id": "R-01", "restriccion": "Aprobación de los planos de detalle IIE-PL-201", "partida": "Instalaciones eléctricas", "responsable": "Supervisión", "dias": 3}, {"id": "R-05", "restriccion": "Aprobación de la muestra de ladrillo (SUB-004)", "partida": "Albañilería", "responsable": "Supervisión", "dias": 6}, {"id": "R-02", "restriccion": "Llegada y certificación del acero, lote 3 (SUB-007)", "partida": "Concreto en columnas", "responsable": "Logística", "dias": 6}]}, "bim_fuera_de_tolerancia": [{"partida": "Concreto en vigas y losas", "diferencia_pct": -4.86, "tolerancia": "±3 %"}], "incompatibilidades_abiertas": [{"id": "INC-01", "descripcion": "Montante sanitaria Ø4\" atraviesa la viga V-203", "severidad": "Alta", "documento": "CSSM-CAS-EST-RFI-011"}, {"id": "INC-02", "descripcion": "Bandeja eléctrica cruza el ducto de extracción del pasillo", "severidad": "Media", "documento": "Sin documento emitido"}, {"id": "INC-05", "descripcion": "Tramo de desagüe sin la pendiente mínima", "severidad": "Baja", "documento": "En revisión del proyectista"}], "fuente": "5f8d0853-San-Marcos-datos-de-obra.xlsx"};
+
+const $ = (s, r = document) => r.querySelector(s);
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const nf = (n, d = 1) => n.toFixed(d).replace('.', ',').replace('-', '−');
+const pct = (n, d = 1) => nf(n, d) + ' %';
+const pp = n => nf(n, 1) + ' pp';
+const soles = n => { const [i, f] = n.toFixed(2).split('.'); return 'S/ ' + i.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ',' + f; };
+const ymd = iso => iso.split('-').reverse().join('/');
+const icon = (id, s = 16) => '<svg width="' + s + '" height="' + s + '" aria-hidden="true"><use href="#' + id + '"/></svg>';
+
+const O = D.obra, I = D.indicadores;
+const AMB = parseFloat(O['Umbral de atraso ámbar']);
+const RED = parseFloat(O['Umbral de atraso rojo']);
+const TOL = parseFloat(O['Tolerancia de metrado BIM'].replace(/[^\d.,]/g, '').replace(',', '.'));
+const critNames = new Set(D.partidas.filter(p => p.estado === 'Crítico').map(p => p.partida));
+
+/* estrellas */
+(function stars() {
+  const c = $('#stars'), g = c.getContext('2d');
+  let seed = 20260804;
+  const rnd = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+  function draw() {
+    const w = c.width = innerWidth, h = c.height = innerHeight;
+    g.clearRect(0, 0, w, h);
+    const n = Math.round(w * h / 5200);
+    seed = 20260804;
+    for (let k = 0; k < n; k++) {
+      const x = rnd() * w, y = rnd() * h, r = rnd(), a = .25 + rnd() * .75, t = rnd();
+      const rad = r > .97 ? 1.7 : r > .85 ? 1.2 : .7;
+      g.fillStyle = t > .9 ? 'rgba(255,214,170,' + a + ')' : t > .7 ? 'rgba(160,200,255,' + a + ')' : 'rgba(255,255,255,' + a + ')';
+      g.beginPath(); g.arc(x, y, rad, 0, 6.2832); g.fill();
+      if (r > .985) { g.strokeStyle = 'rgba(190,220,255,.35)'; g.lineWidth = .6; g.beginPath(); g.moveTo(x - 5, y); g.lineTo(x + 5, y); g.moveTo(x, y - 5); g.lineTo(x, y + 5); g.stroke(); }
+    }
+  }
+  draw();
+  let t; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(draw, 120); });
+})();
+
+/* cabecera */
+$('#h-contrato').textContent = O['Contrato'] + ' · ' + O['Contratista'];
+$('#h-obra').textContent = O['Obra'];
+$('#h-ubic').textContent = O['Ubicación'] + ' · ' + O['Entidad'];
+
+/* alerta */
+$('#status').innerHTML =
+  '<div class="badge"><svg width="46" height="46" aria-hidden="true"><use href="#i-crit"/></svg><span class="word">' + esc(D.semaforo) + '</span></div>' +
+  '<p class="msg">' + esc(D.mensaje) + '</p>' +
+  '<div class="meta"><span>Corte ' + ymd(D.corte) + '</span><span>Día de plazo ' + esc(O['Día de plazo transcurrido']) + '</span><span>Informe semanal N.º ' + O['Informe semanal N.º'] + '</span><span>Periodo ' + esc(O['Periodo del informe']) + '</span></div>';
+
+/* foco crítico: solo selecciona y rotula lo que el JSON ya marca como crítico, en riesgo o de severidad alta */
+const chips = [];
+D.partidas.filter(p => p.estado === 'Crítico').forEach(p => chips.push(['crit', 'i-crit', esc(p.item + ' ' + p.partida) + ': ' + pp(p.brecha_pp) + ' de atraso']));
+D.restricciones.vencen_en_7_dias.filter(r => critNames.has(r.partida)).forEach(r => chips.push(['crit', 'i-crit', esc(r.id) + ' vence en ' + r.dias + (r.dias === 1 ? ' día' : ' días') + ' · ' + esc(r.partida)]));
+D.incompatibilidades_abiertas.filter(n => n.severidad === 'Alta').forEach(n => chips.push(['crit', 'i-crit', esc(n.id) + ' severidad alta · ' + esc(n.descripcion)]));
+D.bim_fuera_de_tolerancia.forEach(b => chips.push(['crit', 'i-crit', esc(b.partida) + ': ' + pct(b.diferencia_pct, 2) + ' en el modelo, fuera de ' + esc(b.tolerancia)]));
+D.partidas.filter(p => p.estado === 'En riesgo').forEach(p => chips.push(['risk', 'i-risk', esc(p.item + ' ' + p.partida) + ': ' + pp(p.brecha_pp) + ' de atraso, en riesgo']));
+$('#chips').innerHTML = chips.map(c => '<span class="chip ' + c[0] + '">' + icon(c[1]) + '<span>' + c[2] + '</span></span>').join('');
+
+/* cifras */
+const tiles = [
+  ['Programado', pct(I.programado_pct), 'Ponderado por monto', ''],
+  ['Ejecutado', pct(I.ejecutado_pct), 'Ponderado por monto', ''],
+  ['Atraso sin compensar', pp(I.atraso_sin_compensar_pp), 'Suma de lo que va por debajo de lo programado', ''],
+  ['Atraso de la ruta crítica', pp(I.atraso_ruta_critica_pp), 'Umbral ámbar ' + esc(O['Umbral de atraso ámbar']) + ', rojo ' + esc(O['Umbral de atraso rojo']), ' crit']
+];
+const unitSplit = v => { const m = v.match(/^(.*?) (%|pp)$/); return m ? m[1] + '<small>' + m[2] + '</small>' : v; };
+$('#kpis').innerHTML = tiles.map(t => '<div class="tile' + t[3] + '"><span class="lbl">' + t[0] + '</span><span class="val num">' + unitSplit(t[1]) + '</span><span class="sub">' + t[2] + '</span></div>').join('');
+const aside = [
+  ['Adelanto', unitSplit(pp(I.adelanto_aparte_pp)), 'Partidas por encima de lo programado'],
+  ['Trabajo anticipado', unitSplit(pp(I.anticipado_pp)), 'Partidas que aún no entran en su ventana'],
+  ['Valorizado', soles(I.valorizado_soles), pct(I.valorizado_pct) + ' de ' + soles(I.monto_partidas_soles)]
+];
+$('#aside').innerHTML = aside.map(t => '<div class="tile"><span class="lbl">' + t[0] + '</span><span class="val num"' + (t[0] === 'Valorizado' ? ' style="font-size:30px"' : '') + '>' + t[1] + '</span><span class="sub">' + t[2] + '</span></div>').join('');
+
+/* partidas */
+const EST = {
+  'Crítico':                 { icon: 'i-crit', bar: 'var(--crit)' },
+  'En riesgo':               { icon: 'i-risk', bar: 'var(--warn)' },
+  'En plazo':                { icon: 'i-ok',   bar: 'var(--good)' },
+  'Adelantada':              { icon: 'i-adv',  bar: 'var(--accent)' },
+  'Aún no entra en ventana': { icon: 'i-out',  bar: 'var(--ink-3)' }
+};
+const brechas = D.partidas.map(p => p.brecha_pp).filter(v => v != null);
+const lo = Math.floor(Math.min(0, ...brechas) / 10) * 10 - 10;
+const hi = Math.ceil(Math.max(RED, ...brechas) / 5) * 5 + 10;
+const x = v => ((v - lo) / (hi - lo)) * 100;
+
+const ticks = []; for (let v = lo; v <= hi; v += 10) ticks.push(v);
+$('#ticks').innerHTML = ticks.map(v => '<span style="left:' + x(v) + '%">' + (v === AMB ? v + ' ámbar' : v === RED ? v + ' rojo' : nf(v, 0)) + '</span>').join('');
+$('#cap').innerHTML = '<span style="right:' + (100 - x(0)) + '%;padding-right:6px">← adelanto</span><span style="left:' + x(0) + '%;padding-left:6px">atraso →</span>';
+
+const rowsEl = $('#rows');
+D.partidas.forEach((p, i) => {
+  const e = EST[p.estado] || EST['Aún no entra en ventana'];
+  const li = el('li', 'row' + (p.estado === 'Crítico' ? ' crit' : p.estado === 'En riesgo' ? ' risk' : '')); li.tabIndex = 0; li.dataset.i = i; li.dataset.rc = p.ruta_critica ? '1' : '0';
+  const who = '<div class="who"><div class="top"><span class="item">' + esc(p.item) + '</span><span class="name">' + esc(p.partida) + '</span>' + (p.ruta_critica ? '<span class="rc">Ruta crítica</span>' : '') + '</div><div class="sub">Prog. ' + pct(p.programado_pct) + ' · Ejec. ' + pct(p.ejecutado_pct) + '</div></div>';
+  let plot = '<div class="plot">' +
+    '<span class="gl zero" style="left:' + x(0) + '%"></span>' +
+    '<span class="gl amb" style="left:' + x(AMB) + '%"></span>' +
+    '<span class="gl red" style="left:' + x(RED) + '%"></span>';
+  const b = p.brecha_pp;
+  if (b == null) {
+    plot += '<span class="val out" style="left:calc(' + x(0) + '% + 8px);max-width:calc(' + (100 - x(0)) + '% - 12px)">Sin brecha: trabajo anticipado</span>';
+  } else if (b >= 0) {
+    const w = Math.max(x(b) - x(0), 0);
+    plot += '<span class="bar pos' + (p.estado === 'Crítico' ? ' glow' : '') + '" style="left:' + x(0) + '%;width:' + (w ? w + '%' : '3px') + ';background:' + e.bar + '"></span>' +
+      '<span class="val" style="left:calc(' + x(b) + '% + 6px)">' + pp(b) + '</span>';
+  } else {
+    plot += '<span class="bar neg" style="left:' + x(b) + '%;width:' + (x(0) - x(b)) + '%;background:var(--accent)"></span>' +
+      '<span class="val" style="right:calc(' + (100 - x(b)) + '% + 6px)">' + pp(b) + '</span>';
+  }
+  plot += '</div>';
+  const st = '<div class="st">' + icon(e.icon) + '<span>' + esc(p.estado) + '</span></div>';
+  li.innerHTML = who + plot + st;
+  li.setAttribute('aria-label', p.item + ' ' + p.partida + ': ' + p.estado + (b == null ? '' : ', brecha ' + nf(b, 1) + ' puntos'));
+  rowsEl.appendChild(li);
+});
+
+$('#legend').innerHTML = Object.keys(EST).map(k => '<span>' + icon(EST[k].icon, 14) + esc(k) + '</span>').join('');
+
+$('#solo-rc').addEventListener('change', ev => {
+  rowsEl.querySelectorAll('.row').forEach(r => { r.hidden = ev.target.checked && r.dataset.rc !== '1'; });
+});
+
+/* tabla */
+$('#tabla').innerHTML =
+  '<thead><tr><th>Ítem</th><th>Partida</th><th>Ruta crítica</th><th>Responsable</th><th class="r">Monto (S/)</th><th class="r">Peso</th><th class="r">Programado</th><th class="r">Ejecutado</th><th class="r">Brecha (pp)</th><th>Estado</th></tr></thead><tbody>' +
+  D.partidas.map(p => '<tr' + (p.estado === 'Crítico' ? ' class="crit"' : '') + '><td>' + esc(p.item) + '</td><td>' + esc(p.partida) + '</td><td>' + (p.ruta_critica ? 'Sí' : 'No') + '</td><td>' + esc(p.responsable) + '</td><td class="r">' + soles(p.monto).replace('S/ ', '') + '</td><td class="r">' + pct(p.peso_pct) + '</td><td class="r">' + pct(p.programado_pct) + '</td><td class="r">' + pct(p.ejecutado_pct) + '</td><td class="r">' + (p.brecha_pp == null ? 'sin brecha' : nf(p.brecha_pp, 1)) + '</td><td>' + esc(p.estado) + '</td></tr>').join('') + '</tbody>';
+
+/* tooltip de partidas */
+const tip = $('#tip');
+function showTip(li, cx, cy) {
+  const p = D.partidas[+li.dataset.i];
+  tip.innerHTML = '<b>' + esc(p.item + ' ' + p.partida) + '</b><br>Responsable: ' + esc(p.responsable) + '<br>Monto ' + soles(p.monto) + ' · peso ' + pct(p.peso_pct) + '<br>Programado ' + pct(p.programado_pct) + ' · ejecutado ' + pct(p.ejecutado_pct) + '<br>' + (p.brecha_pp == null ? 'Sin brecha: aún no entra en su ventana' : 'Brecha ' + pp(p.brecha_pp)) + ' · ' + esc(p.estado);
+  tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.max(8, Math.min(cx + 14, innerWidth - r.width - 8)) + 'px';
+  tip.style.top = Math.max(8, Math.min(cy + 14, innerHeight - r.height - 8)) + 'px';
+}
+rowsEl.querySelectorAll('.row').forEach(li => {
+  li.addEventListener('pointermove', ev => showTip(li, ev.clientX, ev.clientY));
+  li.addEventListener('pointerleave', () => { tip.hidden = true; });
+  li.addEventListener('focus', () => { const b = li.getBoundingClientRect(); showTip(li, b.left + 40, b.top + 10); });
+  li.addEventListener('blur', () => { tip.hidden = true; });
+});
+
+/* restricciones */
+$('#rest-sub').textContent = D.restricciones.pendientes + ' pendientes de ' + D.restricciones.total;
+$('#rlist').innerHTML = D.restricciones.vencen_en_7_dias.map(r =>
+  '<li class="rst' + (critNames.has(r.partida) ? ' crit' : '') + '"><span class="rid">' + esc(r.id) + '</span><div><div class="rt">' + esc(r.restriccion) + '</div><div class="rm">' + esc(r.partida) + ' · ' + esc(r.responsable) + '</div></div>' +
+  '<div class="dcol"><div class="dy"><b class="num">' + r.dias + '</b>' + (r.dias === 1 ? 'día' : 'días') + '</div><div class="dtrack"><i style="left:' + (r.dias / 7 * 100) + '%"></i></div><div class="dscale"><span>corte</span><span>7 días</span></div></div></li>').join('');
+
+/* plan semanal */
+const P = D.ppc;
+$('#ppc-val').textContent = pct(P.ultimo_pct);
+$('#ppc-lbl').textContent = 'PPC de la semana ' + P.ultima_semana;
+$('#ppc-meter').innerHTML = '<div class="fill" style="width:' + P.ultimo_pct + '%"></div>' +
+  '<span class="tick" style="left:' + P.promedio_pct + '%"></span>' +
+  '';
+$('#ppc-meter').insertAdjacentHTML('afterend', '<div class="mleg"><i></i><span>Promedio de las últimas ' + P.semanas + ' semanas: ' + pct(P.promedio_pct) + '</span></div>');
+$('#ppc-meter').setAttribute('aria-label', 'PPC de la semana ' + P.ultima_semana + ': ' + pct(P.ultimo_pct) + '. Promedio de las últimas ' + P.semanas + ' semanas: ' + pct(P.promedio_pct));
+
+/* BIM */
+$('#bim').innerHTML = D.bim_fuera_de_tolerancia.map(b => {
+  const dom = Math.ceil(Math.max(Math.abs(b.diferencia_pct), TOL)) + 3;
+  const X = v => (v + dom) / (2 * dom) * 100;
+  return '<span class="alert-tag">' + icon('i-crit', 14) + 'Fuera de tolerancia</span>' +
+    '<div class="kv crit"><span class="big num">' + pct(b.diferencia_pct, 2) + '</span><span>' + esc(b.partida) + '</span></div>' +
+    '<div class="bim" role="img" aria-label="' + esc(b.partida) + ': ' + nf(b.diferencia_pct, 2) + ' por ciento, tolerancia ' + esc(b.tolerancia) + '">' +
+    '<span class="band" style="left:' + X(-TOL) + '%;width:' + (X(TOL) - X(-TOL)) + '%"></span><span class="zero" style="left:' + X(0) + '%"></span><span class="dot" style="left:' + X(b.diferencia_pct) + '%"></span></div>' +
+    '<div class="bimcap"><span>' + nf(-dom, 0) + ' %</span><span>Tolerancia ' + esc(b.tolerancia) + ' (franja)</span><span>+' + dom + ' %</span></div>';
+}).join('');
+const SEV = { 'Alta': [3, 'var(--crit)'], 'Media': [2, 'var(--serious)'], 'Baja': [1, 'var(--ink-3)'] };
+$('#inc').innerHTML = D.incompatibilidades_abiertas.map(n => {
+  const s = SEV[n.severidad] || [1, 'var(--ink-3)'];
+  const bars = [1, 2, 3].map(k => '<i style="height:' + (5 + k * 3) + 'px;background:' + (k <= s[0] ? s[1] : 'var(--surface-2)') + '"></i>').join('');
+  const none = /^Sin documento/i.test(n.documento);
+  return '<li' + (n.severidad === 'Alta' ? ' class="crit"' : '') + '><span class="id">' + esc(n.id) + '</span><div><div class="d">' + esc(n.descripcion) + '</div><div class="doc' + (none ? ' none' : '') + '">' + esc(n.documento) + '</div></div><span class="sev"><span style="display:inline-flex;align-items:flex-end;gap:2px">' + bars + '</span>' + esc(n.severidad) + '</span></li>';
+}).join('');
+
+$('#f-fuente').textContent = 'Fuente: ' + D.fuente + ' · corte ' + ymd(D.corte);
+</script>
+</body>
+</html>
